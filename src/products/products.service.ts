@@ -13,4 +13,7 @@ export class ProductsService {
       },
     });
   }
+  async getProducts() {
+    return this.databaseService.products.findMany();
+  }
 }
