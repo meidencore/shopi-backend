@@ -1,6 +1,9 @@
 # sqlite dev database
 *.db
 
+# statics files
+/public
+
 # compiled output
 /dist
 /node_modules
