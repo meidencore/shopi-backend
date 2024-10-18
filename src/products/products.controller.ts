@@ -4,7 +4,9 @@ import {
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
+  ParseIntPipe,
   Post,
   UploadedFile,
   UseGuards,
@@ -18,7 +20,7 @@ import { TokenPayload } from '../auth/interfaces/token-payload.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { promises as fs } from 'fs';
+import { PRODUCT_IMAGE } from './product-image';
 
 @UseGuards(JwtAuthGuard)
 @Controller('products')
@@ -37,7 +39,7 @@ export class ProductsController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: 'public/products',
+        destination: PRODUCT_IMAGE,
         filename: (req, file, callback) => {
           callback(
             null,
@@ -63,24 +65,11 @@ export class ProductsController {
 
   @Get()
   async getProducts() {
-    const products = await this.productsService.getProducts();
-    return Promise.all(
-      products.map(async (product) => ({
-        ...product,
-        imageExists: await this.imageExists(product.id),
-      })),
-    );
+    return await this.productsService.getProducts();
   }
 
-  private async imageExists(productId: number) {
-    try {
-      await fs.access(
-        join(__dirname, '../../', `public/products/${productId}.jpg`),
-        fs.constants.F_OK,
-      );
-      return true;
-    } catch {
-      return false;
-    }
+  @Get(':productId')
+  async getProduct(@Param('productId', ParseIntPipe) productId: number) {
+    return await this.productsService.getProduct(productId);
   }
 }
