@@ -4,6 +4,7 @@ import { DatabaseService } from 'src/database/database.service';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { PRODUCT_IMAGE } from './product-image';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
@@ -30,14 +31,27 @@ export class ProductsService {
     }
   }
 
-  async getProducts() {
-    const products = await this.databaseService.products.findMany();
+  async getProducts(status?: string) {
+    const args: Prisma.ProductsFindManyArgs = {};
+
+    if (status === 'availible') {
+      args.where = { sold: false };
+    }
+
+    const products = await this.databaseService.products.findMany(args);
     return Promise.all(
       products.map(async (product) => ({
         ...product,
         imageExists: await this.imageExists(product.id),
       })),
     );
+  }
+
+  async update(productId: number, data: Prisma.ProductsUpdateInput) {
+    await this.databaseService.products.update({
+      where: { id: productId },
+      data,
+    });
   }
 
   private async imageExists(productId: number) {
